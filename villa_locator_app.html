@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Villa Locator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    label, select, input, button {
+      display: block;
+      margin-bottom: 15px;
+      width: 100%;
+    }
+    iframe {
+      width: 100%;
+      height: 300px;
+      margin-top: 20px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Find Your Villa</h2>
+  <label for="phase">Select Phase:</label>
+  <select id="phase">
+    <option value="">--Choose a phase--</option>
+    <option value="Phase 1">Phase 1</option>
+    <option value="Phase 2">Phase 2</option>
+  </select>
+
+  <label for="villa">Enter Villa Number:</label>
+  <input type="text" id="villa" placeholder="e.g. 101" />
+
+  <button onclick="findVilla()">Find Location</button>
+
+  <div id="result"></div>
+
+  <script>
+    const villaMap = {
+      "Phase 1": {
+        "101": "https://www.google.com/maps?q=12.902345,80.231234",
+        "102": "https://www.google.com/maps?q=12.902789,80.231567"
+      },
+      "Phase 2": {
+        "101": "https://www.google.com/maps?q=12.903456,80.232345"
+      }
+    };
+
+    function findVilla() {
+      const phase = document.getElementById('phase').value;
+      const villa = document.getElementById('villa').value.trim();
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '';
+
+      if (!phase || !villa) {
+        resultDiv.innerHTML = '<p style="color: red;">Please select a phase and enter a villa number.</p>';
+        return;
+      }
+
+      const mapUrl = villaMap[phase]?.[villa];
+
+      if (mapUrl) {
+        resultDiv.innerHTML = `
+          <p><a href="${mapUrl}" target="_blank">Open in Google Maps</a></p>
+          <iframe src="${mapUrl}&output=embed"></iframe>
+        `;
+      } else {
+        resultDiv.innerHTML = '<p style="color: red;">Villa not found. Please check the number or update the map.</p>';
+      }
+    }
+  </script>
+</body>
+</html>
