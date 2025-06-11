@@ -29,13 +29,13 @@
       overflow-x: auto;
       border: 1px solid #ccc;
     }
-    .actions {
+    .actions, .confirm-buttons {
       margin-top: 10px;
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
     }
-    .actions button {
+    .actions button, .actions a button, .confirm-buttons button {
       flex-grow: 1;
       width: auto;
     }
@@ -53,10 +53,10 @@
   <textarea id="info" rows="3" placeholder="e.g. Near the park, has a red gate"></textarea><button onclick="getCurrentLocation()">Get My Location</button>
 
   <div id="geo-output"></div>  <script>
-    const formUrl = "https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse"; // Replace with your real Form URL
-    const jsonField = "entry.1111111111";  // Replace with your actual Google Form field ID for JSON
-    const phaseField = "entry.2222222222"; // Replace with your actual field ID for Phase
-    const villaField = "entry.3333333333"; // Replace with your actual field ID for Villa Number
+    const urlParams = new URLSearchParams(window.location.search);
+    const showJson = urlParams.has('json');
+
+    let currentJsonOutput = null;
 
     function getCurrentLocation() {
       const geoOutput = document.getElementById('geo-output');
@@ -83,15 +83,13 @@
           const lon = position.coords.longitude;
           const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
 
-          const jsonOutput = {
+          currentJsonOutput = {
             phase,
             villa,
             url: mapUrl,
             street,
             ...(info && { info })
           };
-
-          const jsonString = JSON.stringify(jsonOutput, null, 2);
 
           geoOutput.innerHTML = `
             <h3>📍 Villa Location</h3>
@@ -102,36 +100,16 @@
             <p><strong>Coordinates:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}</p>
             <p><a href="${mapUrl}" target="_blank">Open in Google Maps</a></p>
             <iframe src="${mapUrl}&output=embed&nocache=${Date.now()}"></iframe>
-            <h4>📄 JSON Output</h4>
-            <pre id="json-output">${jsonString}</pre><div class="actions">
-          <button onclick="copyJson()">📋 Copy JSON</button>
-        </div>
+            <div class="confirm-buttons">
+              <button onclick="submitToGoogleForm()">✅ Looks OK - Submit</button>
+              <button onclick="getCurrentLocation()">🔄 Not OK - Retry</button>
+            </div>
+            ${showJson ? `
+              <h4>📄 JSON Output</h4>
+              <pre id="json-output">${JSON.stringify(currentJsonOutput, null, 2)}</pre><div class="actions">
+            <button onclick="copyJson()">📋 Copy JSON</button>
+          </div>` : ''}
       `;
-
-      // Submit to Google Form
-      const formData = new FormData();
-      formData.append(jsonField, jsonString);
-      formData.append(phaseField, phase);
-      formData.append(villaField, villa);
-
-      fetch(formUrl, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData,
-      }).then(() => {
-        geoOutput.innerHTML += `
-          <p style="color: green; font-weight: bold; margin-top: 20px;">
-            ✅ Your villa information has been submitted. Thank you!
-          </p>
-          <p>If you want to contribute for another villa, refresh this page.</p>
-        `;
-      }).catch(() => {
-        geoOutput.innerHTML += `
-          <p style="color: red; font-weight: bold;">
-            ⚠️ Something went wrong while submitting. Please try again.
-          </p>
-        `;
-      });
     },
     () => {
       geoOutput.innerHTML = '<p style="color: red;">Unable to retrieve your location.</p>';
@@ -144,6 +122,26 @@ function copyJson() {
   navigator.clipboard.writeText(text).then(() => {
     alert('JSON copied to clipboard!');
   });
+}
+
+function submitToGoogleForm() {
+  if (!currentJsonOutput) return;
+
+  const formUrl = 'https://docs.google.com/forms/d/e/your-form-id/formResponse';
+  const formData = new FormData();
+
+  // Replace entry.xxxxxx with your actual form field entry IDs
+  formData.append('entry.111111', currentJsonOutput.phase);
+  formData.append('entry.222222', currentJsonOutput.villa);
+  formData.append('entry.333333', JSON.stringify(currentJsonOutput));
+
+  fetch(formUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: formData
+  });
+
+  alert('✅ Submitted successfully!');
 }
 
   </script>
