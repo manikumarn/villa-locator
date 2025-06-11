@@ -39,6 +39,18 @@
       flex-grow: 1;
       width: auto;
     }
+    .spinner {
+      margin: 20px auto;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #ccc;
+      border-top-color: #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -58,6 +70,15 @@
 
     let currentJsonOutput = null;
 
+    function clearGeoOutput() {
+      const geoOutput = document.getElementById('geo-output');
+      geoOutput.innerHTML = '';
+    }
+
+    function showSpinner() {
+      document.getElementById('geo-output').innerHTML = '<div class="spinner"></div><p>Fetching location...</p>';
+    }
+
     function getCurrentLocation() {
       const geoOutput = document.getElementById('geo-output');
       const phase = document.getElementById('phase').value;
@@ -70,7 +91,9 @@
         return;
       }
 
-      geoOutput.innerHTML = 'Fetching location...';
+      currentJsonOutput = null;
+      clearGeoOutput();
+      showSpinner();
 
       if (!navigator.geolocation) {
         geoOutput.innerHTML = '<p style="color: red;">Geolocation is not supported by your browser.</p>';
