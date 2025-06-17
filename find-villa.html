@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Find Villa - Chettinadd Enclave</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      margin: auto;
+      max-width: 600px;
+      background: #fff;
+      color: #000;
+    }
+
+    input, select {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      font-size: 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .villa-result {
+      margin-top: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1rem;
+      background-color: #f9f9f9;
+    }
+
+    .back-button {
+      display: inline-block;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+    }
+
+    iframe {
+      width: 100%;
+      height: 300px;
+      margin-top: 1rem;
+      border: none;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Find Villa - Chettinadd Enclave</h1>
+  <form id="searchForm" onsubmit="handleSearch(event)">
+    <input id="villaInput" placeholder="Enter Villa Number (e.g., A8, 27, a8, a 8)" required />
+    <select id="phaseInput">
+      <option value="">Any Phase</option>
+      <option value="Phase 1">Phase 1</option>
+      <option value="Phase 2">Phase 2</option>
+    </select>
+    <button type="submit">Locate</button>
+  </form>
+
+  <div id="results"></div>
+
+  <script>
+    const villaData = [
+      {
+        "villaNumber": "A8",
+        "phase": "Phase 1",
+        "street": "5th Avenue",
+        "landmark": "Near main gate",
+        "mapUrl": "https://www.google.com/maps?q=12.9402334,80.200753"
+      },
+      {
+        "villaNumber": "A8",
+        "phase": "Phase 2",
+        "street": "7th Cross Street",
+        "landmark": "Behind DAV compound",
+        "mapUrl": "https://www.google.com/maps?q=12.94105577104427,80.20254436420235"
+      },
+      {
+        "villaNumber": "27",
+        "phase": "Phase 1",
+        "street": "3rd Ave",
+        "landmark": "Near Tennis Court",
+        "mapUrl": "https://www.google.com/maps?q=12.941360861013827,80.20111849548641"
+      }
+    ];
+
+    function normalize(str) {
+      return str.replace(/\s+/g, '').toLowerCase();
+    }
+
+    let isFromList = false;
+
+    function handleSearch(e) {
+      e.preventDefault();
+      const input = document.getElementById("villaInput").value;
+      const phaseInput = document.getElementById("phaseInput").value;
+      const searchVilla = normalize(input);
+
+      const matches = villaData.filter(villa =>
+        normalize(villa.villaNumber) === searchVilla &&
+        (!phaseInput || villa.phase === phaseInput)
+      );
+
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = '';
+      isFromList = false;
+
+      if (matches.length === 0) {
+        resultsDiv.innerHTML = `<div class="villa-result">Villa not found. Resident may contact the association to add details.</div>`;
+        return;
+      }
+
+      if (!phaseInput && matches.length > 1) {
+        resultsDiv.innerHTML = '<div class="villa-result"><b>Villa number exists in both phases. Select one.</b><ul>' +
+          matches.map((villa, index) =>
+            `<li><a href="#" onclick="showVilla(${villaData.indexOf(villa)}, true)">${villa.phase} - ${villa.street} ${villa.landmark ? '(' + villa.landmark + ')' : ''}</a></li>`
+          ).join('') +
+          '</ul></div>';
+        return;
+      }
+
+      showVilla(villaData.indexOf(matches[0]), false);
+    }
+
+    function showVilla(index, fromList) {
+      const villa = villaData[index];
+      const resultsDiv = document.getElementById("results");
+      isFromList = fromList;
+
+      resultsDiv.innerHTML = `
+        ${isFromList ? '<div class="back-button" onclick="showList()">← Back to list</div>' : ''}
+        <div class="villa-result">
+          <b>Villa Number:</b> ${villa.villaNumber}<br>
+          <b>Phase:</b> ${villa.phase}<br>
+          <b>Street:</b> ${villa.street}<br>
+          ${villa.landmark ? `<b>Landmark:</b> ${villa.landmark}<br>` : ''}
+          <iframe src="${villa.mapUrl}&output=embed" loading="lazy"></iframe>
+          <div><a href="${villa.mapUrl}" target="_blank">Navigate in Google Maps</a></div>
+        </div>
+      `;
+    }
+
+    function showList() {
+      handleSearch(new Event('submit'));
+    }
+  </script>
+</body>
+</html>
